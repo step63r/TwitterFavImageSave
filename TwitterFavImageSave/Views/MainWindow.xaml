@@ -1,0 +1,18 @@
+﻿<Window x:Class="TwitterFavImageSave.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:prism="http://prismlibrary.com/"
+        prism:ViewModelLocator.AutoWireViewModel="True"
+        Title="{Binding Title}" Height="350" Width="525">
+    <Grid>
+        <!--<ContentControl prism:RegionManager.RegionName="ContentRegion">-->
+        <StackPanel Orientation="Vertical">
+            <Button x:Name="First" Content="認証開始" Command="{Binding FirstCommand}" />
+            <TextBox x:Name="InputPin" Text="{Binding Pincode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox x:Name="InputMessage" Text="{Binding Message, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <Button x:Name="Second" Content="ツイート" Command="{Binding SecondCommand}" />
+            <Label x:Name="Result" Content="{Binding ResultMessage, UpdateSourceTrigger=PropertyChanged}" />
+        </StackPanel>
+        <!--</ContentControl>-->
+    </Grid>
+</Window>
