@@ -29,13 +29,7 @@
         </Grid>
         <Grid Grid.Row="1">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <Button Content="OK" IsDefault="True" Style="{DynamicResource MaterialDesignFlatButton}">
-                    <i:Interaction.Triggers>
-                        <i:EventTrigger EventName="Click">
-                            <i:InvokeCommandAction Command="{Binding DispatchDialogOkCommand}" />
-                        </i:EventTrigger>
-                    </i:Interaction.Triggers>
-                </Button>
+                <Button Content="OK" IsDefault="True" Command="{Binding DispatchDialogOkCommand}" Style="{DynamicResource MaterialDesignFlatButton}" />
             </StackPanel>
         </Grid>
     </Grid>

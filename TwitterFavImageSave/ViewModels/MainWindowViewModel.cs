@@ -154,6 +154,8 @@ namespace TwitterFavImageSave.ViewModels
 
         public MainWindowViewModel()
         {
+            //Properties.Settings.Default.AccessToken = "";
+            //Properties.Settings.Default.AccessTokenSecret = "";
             // トークン読込
             if (string.IsNullOrEmpty(Properties.Settings.Default.AccessToken) || string.IsNullOrEmpty(Properties.Settings.Default.AccessTokenSecret))
             {

@@ -17,20 +17,8 @@
         </Grid>
         <Grid Grid.Row="1">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <Button Content="OK" IsDefault="True" Style="{DynamicResource MaterialDesignFlatButton}">
-                    <i:Interaction.Triggers>
-                        <i:EventTrigger EventName="Click">
-                            <i:InvokeCommandAction Command="{Binding DispatchDialogOkCommand}" />
-                        </i:EventTrigger>
-                    </i:Interaction.Triggers>
-                </Button>
-                <Button Content="キャンセル" IsCancel="True" Margin="10,0,0,0" Style="{DynamicResource MaterialDesignFlatButton}">
-                    <i:Interaction.Triggers>
-                        <i:EventTrigger EventName="Click">
-                            <i:InvokeCommandAction Command="{Binding DispatchDialogCancelCommand}" />
-                        </i:EventTrigger>
-                    </i:Interaction.Triggers>
-                </Button>
+                <Button Content="OK" IsDefault="True" Command="{Binding DispatchDialogOkCommand}" Style="{DynamicResource MaterialDesignFlatButton}" />
+                <Button Content="キャンセル" IsCancel="True" Margin="10,0,0,0" Command="{Binding DispatchDialogCancelCommand}" Style="{DynamicResource MaterialDesignFlatButton}" />
             </StackPanel>
         </Grid>
     </Grid>
