@@ -56,6 +56,22 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="UserControls\DialogInputPincode.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\MaterialDialogOk.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\MaterialDialogOkCancel.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\MaterialDialogOkScroll.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -63,6 +79,21 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Common\DataFormat.cs" />
+    <Compile Include="Common\XmlConverter.cs" />
+    <Compile Include="Domain\NotEmptyValidationRule.cs" />
+    <Compile Include="UserControls\DialogInputPincode.xaml.cs">
+      <DependentUpon>DialogInputPincode.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\MaterialDialogOk.xaml.cs">
+      <DependentUpon>MaterialDialogOk.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\MaterialDialogOkCancel.xaml.cs">
+      <DependentUpon>MaterialDialogOkCancel.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\MaterialDialogOkScroll.xaml.cs">
+      <DependentUpon>MaterialDialogOkScroll.xaml</DependentUpon>
     </Compile>
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Compile Include="Views\MainWindow.xaml.cs">
@@ -88,6 +119,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="app.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -96,6 +128,15 @@
   <ItemGroup>
     <PackageReference Include="CoreTweet">
       <Version>1.0.0.483</Version>
+    </PackageReference>
+    <PackageReference Include="log4net">
+      <Version>2.0.8</Version>
+    </PackageReference>
+    <PackageReference Include="MahApps.Metro">
+      <Version>1.6.5</Version>
+    </PackageReference>
+    <PackageReference Include="MaterialDesignColors">
+      <Version>1.1.3</Version>
     </PackageReference>
     <PackageReference Include="MaterialDesignThemes">
       <Version>2.5.0.1205</Version>
