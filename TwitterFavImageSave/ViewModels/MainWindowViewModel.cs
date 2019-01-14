@@ -198,6 +198,8 @@ namespace TwitterFavImageSave.ViewModels
                     Properties.Settings.Default.TwitterApiSecret,
                     Properties.Settings.Default.AccessToken,
                     Properties.Settings.Default.AccessTokenSecret);
+
+                UpdateUserControl();
             }            
         }
 
@@ -207,7 +209,7 @@ namespace TwitterFavImageSave.ViewModels
             if (ret is null)
             {
                 // お気に入りに何も登録されていなかった場合
-                // TODO
+                return;
             }
 
             LastTweetId = GetOldestTwitterId(ret);
