@@ -185,8 +185,6 @@ namespace TwitterFavImageSave.ViewModels
         public MainWindowViewModel()
         {
             AccessToken = new Tokens();
-            //Properties.Settings.Default.AccessToken = "";
-            //Properties.Settings.Default.AccessTokenSecret = "";
             // トークン読込
             if (string.IsNullOrEmpty(Properties.Settings.Default.AccessToken) || string.IsNullOrEmpty(Properties.Settings.Default.AccessTokenSecret))
             {
@@ -200,9 +198,11 @@ namespace TwitterFavImageSave.ViewModels
                     Properties.Settings.Default.TwitterApiSecret,
                     Properties.Settings.Default.AccessToken,
                     Properties.Settings.Default.AccessTokenSecret);
-            }
+            }            
+        }
 
-            // TODO: 異常系
+        private void UpdateUserControl()
+        {
             var ret = GetFavorites();
             if (ret is null)
             {
@@ -211,7 +211,7 @@ namespace TwitterFavImageSave.ViewModels
             }
 
             LastTweetId = GetOldestTwitterId(ret);
-            
+
             if (LastTweetId > 0)
             {
                 foreach (var sts in ret)
@@ -276,6 +276,7 @@ namespace TwitterFavImageSave.ViewModels
                     // ダイアログを閉じる
                     IsDialogOpen = false;
                     DialogView = null;
+                    UpdateUserControl();
                     break;
             }
         }
@@ -393,26 +394,7 @@ namespace TwitterFavImageSave.ViewModels
             var tuple = obj as Tuple<double, double>;
             if (tuple.Item1 == tuple.Item2)
             {
-                var ret = GetFavorites();
-                if (ret is null)
-                {
-                    return;
-                }
-
-                LastTweetId = GetOldestTwitterId(ret);
-
-                foreach (var sts in ret)
-                {
-                    bool bHasMedia = sts.ExtendedEntities.Media is null ? false : true;
-                    if (bHasMedia)
-                    {
-                        for (int i = 0; i < sts.ExtendedEntities.Media.Length; i++)
-                        {
-                            var item = new TweetObjectUserControlViewModel(sts, i);
-                            TweetList.Add(item);
-                        }
-                    }
-                }
+                UpdateUserControl();
             }
         }
         /// <summary>
