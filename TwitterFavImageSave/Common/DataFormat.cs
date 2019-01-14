@@ -15,11 +15,14 @@ namespace TwitterFavImageSave.Common
         /// 共通設定ディレクトリ
         /// </summary>
         public static string BaseDIr = string.Format(@"{0}\TwitterFavImageSave", Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData));
+    }
 
+    public static class CommonSettings
+    {
         /// <summary>
-        /// Token情報
+        /// 一度に読むTweet数
         /// </summary>
-        public static string AuthInfo = string.Format(@"{0}\AuthInfo.xml", BaseDIr);
+        public static int ReadCount = 50;
     }
 
     /// <summary>

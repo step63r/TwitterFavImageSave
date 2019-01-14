@@ -72,6 +72,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="UserControls\TweetObjectUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -81,6 +85,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Common\DataFormat.cs" />
+    <Compile Include="Common\XamlConverter.cs" />
     <Compile Include="Common\XmlConverter.cs" />
     <Compile Include="Domain\NotEmptyValidationRule.cs" />
     <Compile Include="UserControls\DialogInputPincode.xaml.cs">
@@ -95,7 +100,11 @@
     <Compile Include="UserControls\MaterialDialogOkScroll.xaml.cs">
       <DependentUpon>MaterialDialogOkScroll.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\TweetObjectUserControl.xaml.cs">
+      <DependentUpon>TweetObjectUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
+    <Compile Include="ViewModels\TweetObjectUserControlViewModel.cs" />
     <Compile Include="Views\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

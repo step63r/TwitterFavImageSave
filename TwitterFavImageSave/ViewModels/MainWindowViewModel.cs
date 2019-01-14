@@ -1,11 +1,14 @@
 ﻿using CoreTweet;
+using CoreTweet.Core;
 using Prism.Commands;
 using Prism.Interactivity.InteractionRequest;
 using Prism.Mvvm;
 using Reactive.Bindings;
 using System;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Resources;
+using System.Windows.Controls;
 using TwitterFavImageSave.Common;
 using TwitterFavImageSave.UserControls;
 
@@ -17,8 +20,11 @@ namespace TwitterFavImageSave.ViewModels
         private string _title = "TwitterFavImageSave";
         private Tokens _accessToken;
         private string _pincode = "";
+        private long _lastTweetId;
         private OAuth.OAuthSession _session;
         private DelegateCommand _cmdWindowClosing;
+        private DelegateCommand<object> _cmdOnScrollChanged;
+        private TweetObjectUserControlViewModel _objectViewModel;
 
         /// <summary>
         /// MainWindowタイトル
@@ -52,6 +58,17 @@ namespace TwitterFavImageSave.ViewModels
             }
         }
         /// <summary>
+        /// 最後に取得した最も古いTweet ID
+        /// </summary>
+        public long LastTweetId
+        {
+            get { return _lastTweetId; }
+            set
+            {
+                SetProperty(ref _lastTweetId, value);
+            }
+        }
+        /// <summary>
         /// Twitterセッションオブジェクト
         /// </summary>
         public OAuth.OAuthSession Session
@@ -65,6 +82,19 @@ namespace TwitterFavImageSave.ViewModels
         public DelegateCommand CmdWindowClosing
         {
             get { return _cmdWindowClosing = _cmdWindowClosing ?? new DelegateCommand(ExecuteWindowClosing, CanExecuteWindowClosing); }
+        }
+        /// <summary>
+        /// ScrollChangedイベントコマンド
+        /// </summary>
+        public DelegateCommand<object> CmdOnScrollChanged
+        {
+            get { return _cmdOnScrollChanged = _cmdOnScrollChanged ?? new DelegateCommand<object>(ExecuteScrollChanged); }
+        }
+        public ObservableCollection<TweetObjectUserControlViewModel> TweetList { get; set; } = new ObservableCollection<TweetObjectUserControlViewModel>();
+        public TweetObjectUserControlViewModel ObjectViewModel
+        {
+            get { return _objectViewModel; }
+            set { SetProperty(ref _objectViewModel, value); }
         }
 
         #region Dialog系
@@ -154,6 +184,7 @@ namespace TwitterFavImageSave.ViewModels
 
         public MainWindowViewModel()
         {
+            AccessToken = new Tokens();
             //Properties.Settings.Default.AccessToken = "";
             //Properties.Settings.Default.AccessTokenSecret = "";
             // トークン読込
@@ -161,6 +192,40 @@ namespace TwitterFavImageSave.ViewModels
             {
                 // 存在しなければ認証開始
                 StartAuthorize();
+            }
+            else
+            {
+                AccessToken = Tokens.Create(
+                    Properties.Settings.Default.TwitterApiKey,
+                    Properties.Settings.Default.TwitterApiSecret,
+                    Properties.Settings.Default.AccessToken,
+                    Properties.Settings.Default.AccessTokenSecret);
+            }
+
+            // TODO: 異常系
+            var ret = GetFavorites();
+            if (ret is null)
+            {
+                // お気に入りに何も登録されていなかった場合
+                // TODO
+            }
+
+            LastTweetId = GetOldestTwitterId(ret);
+            
+            if (LastTweetId > 0)
+            {
+                foreach (var sts in ret)
+                {
+                    bool bHasMedia = sts.ExtendedEntities is null ? false : true;
+                    if (bHasMedia)
+                    {
+                        for (int i = 0; i < sts.ExtendedEntities.Media.Length; i++)
+                        {
+                            var item = new TweetObjectUserControlViewModel(sts, i);
+                            TweetList.Add(item);
+                        }
+                    }
+                }
             }
         }
 
@@ -181,7 +246,7 @@ namespace TwitterFavImageSave.ViewModels
         /// <summary>
         /// ダイアログで「OK」が押下されたときの挙動をディスパッチする
         /// </summary>
-        public async void DispatchDialogOk()
+        public void DispatchDialogOk()
         {
             // ダイアログ種別で分岐
             switch (DType)
@@ -254,13 +319,107 @@ namespace TwitterFavImageSave.ViewModels
         }
 
         /// <summary>
+        /// お気に入りを取得する
+        /// </summary>
+        /// <returns>お気に入りしたTweet</returns>
+        private ListedResponse<Status> GetFavorites()
+        {
+            ListedResponse<Status> ret = null;
+            if (LastTweetId == 0)
+            {
+                ret = AccessToken.Favorites.List(count => CommonSettings.ReadCount);
+            }
+            else if (LastTweetId > 0)
+            {
+                ret = AccessToken.Favorites.List(count => CommonSettings.ReadCount, max_id => LastTweetId - 1);
+            }
+            return ret;
+        }
+
+        /// <summary>
+        /// 最も古いTweet IDを取得する（リストに何もない場合は -1 を返す）
+        /// </summary>
+        /// <param name="t"></param>
+        /// <returns>最も古いTwitter ID</returns>
+        private long GetOldestTwitterId(ListedResponse<Status> t)
+        {
+            long ret = 0;
+
+            if (t.Count == 0)
+            {
+                ret = -1;
+            }
+
+            foreach (var sts in t)
+            {
+                if (ret == 0)
+                {
+                    ret = sts.Id;
+                }
+                else
+                {
+                    if (ret > sts.Id)
+                    {
+                        ret = sts.Id;
+                    }
+                }
+            }
+            return ret;
+        }
+
+        /// <summary>
         /// Windowを閉じる時のイベントハンドラ
         /// </summary>
         public void ExecuteWindowClosing()
         {
             Properties.Settings.Default.Save();
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         private bool CanExecuteWindowClosing()
+        {
+            return true;
+        }
+
+        /// <summary>
+        /// ScrollChangedイベントハンドラ
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void ExecuteScrollChanged(object obj)
+        {
+            var tuple = obj as Tuple<double, double>;
+            if (tuple.Item1 == tuple.Item2)
+            {
+                var ret = GetFavorites();
+                if (ret is null)
+                {
+                    return;
+                }
+
+                LastTweetId = GetOldestTwitterId(ret);
+
+                foreach (var sts in ret)
+                {
+                    bool bHasMedia = sts.ExtendedEntities.Media is null ? false : true;
+                    if (bHasMedia)
+                    {
+                        for (int i = 0; i < sts.ExtendedEntities.Media.Length; i++)
+                        {
+                            var item = new TweetObjectUserControlViewModel(sts, i);
+                            TweetList.Add(item);
+                        }
+                    }
+                }
+            }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private bool CanExecuteScrollChanged()
         {
             return true;
         }

@@ -5,6 +5,10 @@
                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                       xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
                       xmlns:prism="http://prismlibrary.com/"
+                      xmlns:wpf="clr-namespace:MaterialDesignThemes.Wpf;assembly=MaterialDesignThemes.Wpf"
+                      xmlns:vm="clr-namespace:TwitterFavImageSave.ViewModels"
+                      xmlns:ctrl="clr-namespace:TwitterFavImageSave.UserControls"
+                      xmlns:common="clr-namespace:TwitterFavImageSave.Common"
                       prism:ViewModelLocator.AutoWireViewModel="True"
                       TextElement.Foreground="{DynamicResource MaterialDesignBody}"
                       TextElement.FontWeight="Regular"
@@ -17,6 +21,14 @@
                       Title="{Binding Title}"
                       TitleForeground="White"
                       Height="768" Width="1024">
+    <Window.Resources>
+        <ResourceDictionary>
+            <common:ScrollViewerCommandParameterConverter x:Key="ScrollConverter"/>
+            <!--<ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Skins/MainSkin.xaml" />
+            </ResourceDictionary.MergedDictionaries>-->
+        </ResourceDictionary>
+    </Window.Resources>
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
             <i:InvokeCommandAction Command="{Binding CmdWindowClosing}" CommandParameter="{Binding}" />
@@ -24,15 +36,34 @@
     </i:Interaction.Triggers>
     <materialDesign:DialogHost DialogContent="{Binding Path=DialogView}" IsOpen="{Binding Path=IsDialogOpen}">
         <Grid>
-            <!--<ContentControl prism:RegionManager.RegionName="ContentRegion">-->
-            <!--<StackPanel Orientation="Vertical" Grid.RowSpan="2">
-                <Button x:Name="First" Content="認証開始" Command="{Binding FirstCommand}" />
-                <TextBox x:Name="InputPin" Text="{Binding Pincode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                <TextBox x:Name="InputMessage" Text="{Binding Message, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                <Button x:Name="Second" Content="ツイート" Command="{Binding SecondCommand}" />
-                <Label x:Name="Result" Content="{Binding ResultMessage, UpdateSourceTrigger=PropertyChanged}" />
-            </StackPanel>-->
-            <!--</ContentControl>-->
+            <ScrollViewer x:Name="ParentScrollViewer" VerticalScrollBarVisibility="Auto" CanContentScroll="True">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="ScrollChanged">
+                        <prism:InvokeCommandAction Command="{Binding CmdOnScrollChanged}">
+                            <prism:InvokeCommandAction.CommandParameter>
+                                <MultiBinding Converter="{StaticResource ScrollConverter}">
+                                    <MultiBinding.Bindings>
+                                        <Binding ElementName="ParentScrollViewer" Path="VerticalOffset" />
+                                        <Binding ElementName="ParentScrollViewer" Path="ScrollableHeight" />
+                                    </MultiBinding.Bindings>
+                                </MultiBinding>
+                            </prism:InvokeCommandAction.CommandParameter>
+                        </prism:InvokeCommandAction>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+                <ItemsControl ItemsSource="{Binding TweetList}" HorizontalAlignment="Center">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:TweetObjectUserControlViewModel}">
+                            <ctrl:TweetObjectUserControl />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
         </Grid>
     </materialDesign:DialogHost>
 </Controls:MetroWindow>
