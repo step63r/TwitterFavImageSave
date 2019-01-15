@@ -1,5 +1,7 @@
 # TwitterFavImageSave
 
+![Capture](./TwitterFavImageSave.png)
+
 Help quick save images in your favarites.
 
 ## Description
@@ -13,11 +15,13 @@ You can save images in your favorite tweets at original size.
 
 ## Usage
 
-TBC
+At first you need to authenticate the app with PIN code.
+
+Launch the app and follow directions.
 
 ## Install
 
-TBC
+Use installer.
 
 ## Contribution
 
