@@ -5,9 +5,16 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:TwitterFavImageSave.UserControls"
              xmlns:common="clr-namespace:TwitterFavImageSave.Common"
+             xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" 
+             x:Name="OneTweetObject"
              d:DesignHeight="200" d:DesignWidth="340">
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="MouseMove">
+            <i:InvokeCommandAction Command="{Binding CmdMouseMove}" CommandParameter="{Binding ElementName=OneTweetObject}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
     <UserControl.Resources>
         <ResourceDictionary>
             <common:BoolVisibilityConverter x:Key="BoolVisibilityConverter"/>

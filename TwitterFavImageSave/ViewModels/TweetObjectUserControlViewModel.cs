@@ -10,7 +10,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using TwitterFavImageSave.Common;
+using TwitterFavImageSave.UserControls;
 
 namespace TwitterFavImageSave.ViewModels
 {
@@ -27,6 +30,7 @@ namespace TwitterFavImageSave.ViewModels
         private string _userNameDisplay;
         private DelegateCommand _cmdSaveImageAs;
         private DelegateCommand _cmdViewInBrowser;
+        private DelegateCommand<object> _cmdMouseMove;
 
         /// <summary>
         /// TweetのStatusオブジェクト
@@ -110,6 +114,16 @@ namespace TwitterFavImageSave.ViewModels
         {
             get { return _cmdViewInBrowser = _cmdViewInBrowser ?? new DelegateCommand(ExecuteViewInBrowser, CanExecuteViewInBrowser); }
         }
+        /// <summary>
+        /// MouseMoveイベントコマンド
+        /// </summary>
+        public DelegateCommand<object> CmdMouseMove
+        {
+            //get { return _cmdMouseMove = _cmdMouseMove ?? new DelegateCommand(ExecuteMouseMove, CanExecuteMouseMove); }
+            //get { return _cmdMouseMove = _cmdMouseMove ?? new DelegateCommand<object>(param => ExecuteMouseMove((MouseEventArgs)param)); }
+            get { return _cmdMouseMove = _cmdMouseMove ?? new DelegateCommand<object>(ExecuteMouseMove); }
+
+        }
         #endregion
 
         /// <summary>
@@ -185,6 +199,103 @@ namespace TwitterFavImageSave.ViewModels
         private bool CanExecuteSaveImageAs()
         {
             return !(Status is null);
+        }
+
+        public bool IsProcessing = false;
+
+        /// <summary>
+        /// MouseMoveイベントハンドラ
+        /// </summary>
+        public void ExecuteMouseMove(object obj)
+        {
+            var e = obj as IInputElement;
+            if (!(e is null))
+            {
+                string src_path = GenerateOriginalUrl(TweetImage.UriSource.AbsoluteUri);
+                string dst_path = string.Format(@"{0}\{1}", CommonPath.TmpDir, TweetImage.UriSource.Segments[2]);
+
+                if (Mouse.LeftButton == MouseButtonState.Pressed)
+                {
+                    // 処理中フラグがOFFの場合、ファイルをダウンロードしてフラグを立てる
+                    if (!IsProcessing)
+                    {
+                        using (var client = new WebClient())
+                        {
+                            client.DownloadFile(src_path, dst_path);
+                        }
+                        IsProcessing = true;
+                    }
+
+                    //string path = Path.GetFullPath(dst_path);
+                    //string path = GenerateOriginalUrl(TweetImage.UriSource.AbsoluteUri);
+                    string[] paths = { dst_path };
+
+                    var dataObject = new DataObject();
+                    dataObject.SetData(DataFormats.FileDrop, paths);
+
+                    // あまり良い方法ではない
+                    var ret = DragDrop.DoDragDrop((TweetObjectUserControl)e, dataObject, DragDropEffects.Copy);
+
+                    // コピーが完了したら元ファイルを消す
+                    if (ret == DragDropEffects.Copy)
+                    {
+                        if (IsProcessing)
+                        {
+                            if (File.Exists(Path.GetFullPath(dst_path)))
+                            {
+                                File.Delete(Path.GetFullPath(dst_path));
+                            }
+                            IsProcessing = false;
+                        }
+                    }
+
+                    //string originalpath = GenerateOriginalUrl(TweetImage.UriSource.AbsoluteUri);
+                    //string dstpath = TweetImage.UriSource.Segments[2];
+                    //byte[] data = null;
+                    //var dobj = new CustomDataObject();
+                    //dobj.SetData("FileGroupDescriptorW", null);
+                    //dobj.SetData("FileContents", null);
+                    //dobj.OnGetData = (format, autoConvert) =>
+                    //{
+                    //    if (data == null)
+                    //    {
+                    //        using (var webClient = new WebClient())
+                    //        {
+                    //            data = webClient.DownloadData(originalpath);
+                    //        }
+                    //    }
+                    //    switch (format)
+                    //    {
+                    //        case "FileGroupDescriptorW":
+                    //            var ms = new MemoryStream();
+                    //            var bw = new BinaryWriter(ms);
+                    //            bw.Write(1);
+                    //            bw.Write(0x4040);
+                    //            bw.Write(new byte[16 + 4 * 5 + 8 * 3 + 4]);
+                    //            bw.Write(data.Length);
+                    //            bw.Write(File.ReadAllBytes(dstpath));
+                    //            //bw.Write(Encoding.Unicode.GetBytes("TestDnD.txt".PadRight(260, '\0')));
+                    //            return ms;
+                    //        case "FileContents":
+                    //            return new MemoryStream(data);
+                    //    }
+                    //    return null;
+                    //};
+                    //var dde = DragDrop.DoDragDrop((TweetObjectUserControl)e, dobj, DragDropEffects.Copy);
+                }
+                //// ドラッグ解除
+                //else if (Mouse.LeftButton == MouseButtonState.Released)
+                //{
+                //    if (IsProcessing)
+                //    {
+                //        if (File.Exists(Path.GetFullPath(dst_path)))
+                //        {
+                //            File.Delete(Path.GetFullPath(dst_path));
+                //        }
+                //        IsProcessing = false;
+                //    }
+                //}
+            }
         }
 
         private string GenerateOriginalUrl(string url)

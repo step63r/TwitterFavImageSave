@@ -7,6 +7,7 @@ using Reactive.Bindings;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Resources;
 using System.Windows.Controls;
 using TwitterFavImageSave.Common;
@@ -184,6 +185,9 @@ namespace TwitterFavImageSave.ViewModels
 
         public MainWindowViewModel()
         {
+            // 初期処理
+            GenerateCommonPath();
+
             AccessToken = new Tokens();
             // トークン読込
             if (string.IsNullOrEmpty(Properties.Settings.Default.AccessToken) || string.IsNullOrEmpty(Properties.Settings.Default.AccessTokenSecret))
@@ -389,8 +393,7 @@ namespace TwitterFavImageSave.ViewModels
         /// <summary>
         /// ScrollChangedイベントハンドラ
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param name="obj"></param>
         public void ExecuteScrollChanged(object obj)
         {
             var tuple = obj as Tuple<double, double>;
@@ -406,6 +409,18 @@ namespace TwitterFavImageSave.ViewModels
         private bool CanExecuteScrollChanged()
         {
             return true;
+        }
+
+        /// <summary>
+        /// 共通パスを全部作る（既に存在する場合は無視する）
+        /// </summary>
+        private void GenerateCommonPath()
+        {
+            // 後でちゃんと考える
+            if (!Directory.Exists(CommonPath.TmpDir))
+            {
+                Directory.CreateDirectory(CommonPath.TmpDir);
+            }
         }
     }
 }

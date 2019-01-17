@@ -14,7 +14,11 @@ namespace TwitterFavImageSave.Common
         /// <summary>
         /// 共通設定ディレクトリ
         /// </summary>
-        public static string BaseDIr = string.Format(@"{0}\TwitterFavImageSave", Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData));
+        public static string BaseDir = string.Format(@"{0}\TwitterFavImageSave", Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData));
+        /// <summary>
+        /// 一時ファイル格納ディレクトリ
+        /// </summary>
+        public static string TmpDir = string.Format(@"{0}\tmp", BaseDir);
     }
 
     public static class CommonSettings
