@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Data;
 using TwitterFavImageSave.Common;
 using TwitterFavImageSave.UserControls;
@@ -21,12 +22,14 @@ namespace TwitterFavImageSave.ViewModels
         private Tokens _accessToken;
         private string _pincode = "";
         private long _lastTweetId;
+        private bool _isLoadingUserControl = false;
         private OAuth.OAuthSession _session;
         private DelegateCommand _cmdWindowLoaded;
         private DelegateCommand _cmdWindowClosing;
         private DelegateCommand<object> _cmdOnScrollChanged;
+        private DelegateCommand _btnRemoveAccessToken;
         private TweetObjectUserControlViewModel _objectViewModel;
-
+        
         /// <summary>
         /// MainWindowタイトル
         /// </summary>
@@ -44,6 +47,7 @@ namespace TwitterFavImageSave.ViewModels
             set
             {
                 SetProperty(ref _accessToken, value);
+                BtnRemoveAccessToken.RaiseCanExecuteChanged();
             }
         }
         /// <summary>
@@ -67,6 +71,17 @@ namespace TwitterFavImageSave.ViewModels
             set
             {
                 SetProperty(ref _lastTweetId, value);
+            }
+        }
+        /// <summary>
+        /// UserControl更新中フラグ
+        /// </summary>
+        public bool IsLoadingUserControl
+        {
+            get { return _isLoadingUserControl; }
+            set
+            {
+                SetProperty(ref _isLoadingUserControl, value);
             }
         }
         /// <summary>
@@ -98,13 +113,19 @@ namespace TwitterFavImageSave.ViewModels
         {
             get { return _cmdOnScrollChanged = _cmdOnScrollChanged ?? new DelegateCommand<object>(ExecuteScrollChanged); }
         }
+        /// <summary>
+        /// 「ログアウト」ボタン
+        /// </summary>
+        public DelegateCommand BtnRemoveAccessToken
+        {
+            get { return _btnRemoveAccessToken = _btnRemoveAccessToken ?? new DelegateCommand(ExecuteRemoveAccessToken, CanExecuteRemoveAccessToken); }
+        }
         public ObservableCollection<TweetObjectUserControlViewModel> TweetList { get; set; } = new ObservableCollection<TweetObjectUserControlViewModel>();
         public TweetObjectUserControlViewModel ObjectViewModel
         {
             get { return _objectViewModel; }
             set { SetProperty(ref _objectViewModel, value); }
-        }
-
+        }        
         #region Dialog系
         private DelegateCommand _dispatchDialogOkCommand;
         private DelegateCommand _dispatchDialogCancelCommand;
@@ -197,7 +218,6 @@ namespace TwitterFavImageSave.ViewModels
         {
             // 初期処理
             GenerateCommonPath();
-            BindingOperations.EnableCollectionSynchronization(TweetList, new object());
         }
 
         /// <summary>
@@ -206,6 +226,8 @@ namespace TwitterFavImageSave.ViewModels
         public void ExecuteWindowLoaded()
         {
             AccessToken = new Tokens();
+            BindingOperations.EnableCollectionSynchronization(TweetList, new object());
+
             // トークン読込
             if (string.IsNullOrEmpty(Properties.Settings.Default.AccessToken) || string.IsNullOrEmpty(Properties.Settings.Default.AccessTokenSecret))
             {
@@ -233,6 +255,7 @@ namespace TwitterFavImageSave.ViewModels
         /// </summary>
         private async Task UpdateUserControl()
         {
+            IsLoadingUserControl = true;
             await Task.Run(() =>
             {
                 var ret = GetFavorites();
@@ -260,6 +283,7 @@ namespace TwitterFavImageSave.ViewModels
                     }
                 }
             }).ConfigureAwait(false);
+            IsLoadingUserControl = false;
         }
 
         /// <summary>
@@ -274,6 +298,24 @@ namespace TwitterFavImageSave.ViewModels
                 DataContext = this
             };
             IsDialogOpen = true;
+        }
+
+        /// <summary>
+        /// 「ログアウト」ボタンのイベントハンドラ
+        /// </summary>
+        public void ExecuteRemoveAccessToken()
+        {
+            Message = "認証情報を消去し、画面をリフレッシュします";
+            DType = DialogType.RemoveAuth;
+            DialogView = new MaterialDialogOkCancel()
+            {
+                DataContext = this
+            };
+            IsDialogOpen = true;
+        }
+        private bool CanExecuteRemoveAccessToken()
+        {
+            return !(string.IsNullOrEmpty(Properties.Settings.Default.AccessToken) || string.IsNullOrEmpty(Properties.Settings.Default.AccessTokenSecret));
         }
 
         /// <summary>
@@ -311,6 +353,20 @@ namespace TwitterFavImageSave.ViewModels
                     DialogView = null;
                     var t = UpdateUserControl();
                     break;
+
+                case DialogType.RemoveAuth:
+                    // アクセストークンを削除
+                    Properties.Settings.Default.AccessToken = "";
+                    Properties.Settings.Default.AccessTokenSecret = "";
+                    
+                    // ダイアログを閉じる
+                    IsDialogOpen = false;
+                    DialogView = null;
+
+                    // 画面リフレッシュ
+                    Refresh();
+                    ExecuteWindowLoaded();
+                    break;
             }
         }
         private bool CanDispatchDialogOk()
@@ -325,6 +381,10 @@ namespace TwitterFavImageSave.ViewModels
 
                 case DialogType.InputPincode:
                     ret = !string.IsNullOrEmpty(Pincode);
+                    break;
+
+                case DialogType.RemoveAuth:
+                    ret = true;
                     break;
             }
             return ret;
@@ -423,6 +483,11 @@ namespace TwitterFavImageSave.ViewModels
         /// <param name="obj"></param>
         public void ExecuteScrollChanged(object obj)
         {
+            if (IsLoadingUserControl)
+            {
+                return;
+            }
+
             var tuple = obj as Tuple<double, double>;
             if (tuple.Item1 == tuple.Item2)
             {
@@ -448,6 +513,17 @@ namespace TwitterFavImageSave.ViewModels
             {
                 Directory.CreateDirectory(CommonPath.TmpDir);
             }
+        }
+
+        private void Refresh()
+        {
+            AccessToken = null;
+            Pincode = "";
+            LastTweetId = 0;
+            IsLoadingUserControl = false;
+            Session = null;
+            TweetList.Clear();
+            //TweetList = new ObservableCollection<TweetObjectUserControlViewModel>();
         }
     }
 }

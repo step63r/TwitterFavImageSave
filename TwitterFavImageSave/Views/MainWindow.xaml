@@ -39,6 +39,20 @@
     </i:Interaction.Triggers>
     <materialDesign:DialogHost DialogContent="{Binding Path=DialogView}" IsOpen="{Binding Path=IsDialogOpen}">
         <Grid>
+            <materialDesign:PopupBox StaysOpen="True" PlacementMode="BottomAndAlignRightEdges" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0, 10, 25, 0" Panel.ZIndex="1">
+                <!--<materialDesign:PopupBox.ToggleContent>
+                    <materialDesign:PackIcon Kind="DotsHorizontal" />
+                    --><!--<materialDesign:Chip Content="Twitter" IconBackground="{DynamicResource PrimaryHueDarkBrush}" IconForeground="{DynamicResource PrimaryHueDarkForegroundBrush}">
+                        <materialDesign:Chip.Icon>
+                            <materialDesign:PackIcon Kind="Twitter"></materialDesign:PackIcon>
+                        </materialDesign:Chip.Icon>
+                    </materialDesign:Chip>--><!--
+                </materialDesign:PopupBox.ToggleContent>-->
+                <StackPanel>
+                    <Button Content="ログアウト" Command="{Binding Path=BtnRemoveAccessToken}" ToolTip="認証情報を消去します"/>
+                </StackPanel>
+            </materialDesign:PopupBox>
+            
             <ScrollViewer x:Name="ParentScrollViewer" VerticalScrollBarVisibility="Auto" CanContentScroll="True">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="ScrollChanged">
@@ -54,7 +68,7 @@
                         </prism:InvokeCommandAction>
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
-                <ItemsControl ItemsSource="{Binding TweetList}" HorizontalAlignment="Center">
+                <ItemsControl ItemsSource="{Binding TweetList, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <WrapPanel Orientation="Horizontal" />
