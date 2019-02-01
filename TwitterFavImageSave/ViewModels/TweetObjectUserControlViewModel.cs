@@ -2,14 +2,12 @@
 using Microsoft.Win32;
 using Prism.Commands;
 using Prism.Mvvm;
-using System.ComponentModel;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Net.Cache;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using TwitterFavImageSave.Common;
@@ -31,6 +29,7 @@ namespace TwitterFavImageSave.ViewModels
         private DelegateCommand _cmdSaveImageAs;
         private DelegateCommand _cmdViewInBrowser;
         private DelegateCommand<object> _cmdMouseMove;
+        private Uri _imageUri;
 
         /// <summary>
         /// TweetのStatusオブジェクト
@@ -124,6 +123,14 @@ namespace TwitterFavImageSave.ViewModels
             get { return _cmdMouseMove = _cmdMouseMove ?? new DelegateCommand<object>(ExecuteMouseMove); }
 
         }
+        /// <summary>
+        /// 画像の絶対URL
+        /// </summary>
+        public Uri ImageUrl
+        {
+            get { return _imageUri; }
+            set { SetProperty(ref _imageUri, value); }
+        }
         #endregion
 
         /// <summary>
@@ -146,9 +153,24 @@ namespace TwitterFavImageSave.ViewModels
             TweetText = Status.Text;
             UserName = Status.User.Name;
             UserId = Status.User.ScreenName;
-            TweetImage = new BitmapImage(new System.Uri(Status.ExtendedEntities.Media[mediaIndex].MediaUrl));
-            UserImage = new BitmapImage(new System.Uri(Status.User.ProfileImageUrl));
+            //TweetImage = new BitmapImage(new System.Uri(Status.ExtendedEntities.Media[mediaIndex].MediaUrl));
+            UserImage = new BitmapImage(new Uri(Status.User.ProfileImageUrl));
             UserNameDisplay = CreateUserNameDisplay(UserName, UserId);
+            ImageUrl = new Uri(Status.ExtendedEntities.Media[mediaIndex].MediaUrl);
+
+            using (var webClient = new WebClient())
+            {
+                webClient.CachePolicy = new RequestCachePolicy(RequestCacheLevel.CacheIfAvailable);
+                using (var stream = new WrappingStream(new MemoryStream(webClient.DownloadData(new System.Uri(Status.ExtendedEntities.Media[mediaIndex].MediaUrl)))))
+                {
+                    TweetImage = new BitmapImage();
+                    TweetImage.BeginInit();
+                    TweetImage.StreamSource = stream;
+                    TweetImage.CacheOption = BitmapCacheOption.OnLoad;
+                    TweetImage.EndInit();
+                    TweetImage.Freeze();
+                }
+            }
         }
 
         private string CreateUserNameDisplay(string name, string id)
@@ -187,7 +209,7 @@ namespace TwitterFavImageSave.ViewModels
             {
                 using (var client = new WebClient())
                 {
-                    client.DownloadFile(GenerateOriginalUrl(TweetImage.UriSource.AbsoluteUri), Path.GetFullPath(saveFileDialog.FileName));
+                    client.DownloadFile(GenerateOriginalUrl(ImageUrl.AbsoluteUri), Path.GetFullPath(saveFileDialog.FileName));
                 }
             }
 
@@ -211,8 +233,8 @@ namespace TwitterFavImageSave.ViewModels
             var e = obj as IInputElement;
             if (!(e is null))
             {
-                string src_path = GenerateOriginalUrl(TweetImage.UriSource.AbsoluteUri);
-                string dst_path = string.Format(@"{0}\{1}", CommonPath.TmpDir, TweetImage.UriSource.Segments[2]);
+                string src_path = GenerateOriginalUrl(ImageUrl.AbsoluteUri);
+                string dst_path = string.Format(@"{0}\{1}", CommonPath.TmpDir, ImageUrl.Segments[2]);
 
                 if (Mouse.LeftButton == MouseButtonState.Pressed)
                 {
@@ -226,8 +248,6 @@ namespace TwitterFavImageSave.ViewModels
                         IsProcessing = true;
                     }
 
-                    //string path = Path.GetFullPath(dst_path);
-                    //string path = GenerateOriginalUrl(TweetImage.UriSource.AbsoluteUri);
                     string[] paths = { dst_path };
 
                     var dataObject = new DataObject();
@@ -248,53 +268,7 @@ namespace TwitterFavImageSave.ViewModels
                             IsProcessing = false;
                         }
                     }
-
-                    //string originalpath = GenerateOriginalUrl(TweetImage.UriSource.AbsoluteUri);
-                    //string dstpath = TweetImage.UriSource.Segments[2];
-                    //byte[] data = null;
-                    //var dobj = new CustomDataObject();
-                    //dobj.SetData("FileGroupDescriptorW", null);
-                    //dobj.SetData("FileContents", null);
-                    //dobj.OnGetData = (format, autoConvert) =>
-                    //{
-                    //    if (data == null)
-                    //    {
-                    //        using (var webClient = new WebClient())
-                    //        {
-                    //            data = webClient.DownloadData(originalpath);
-                    //        }
-                    //    }
-                    //    switch (format)
-                    //    {
-                    //        case "FileGroupDescriptorW":
-                    //            var ms = new MemoryStream();
-                    //            var bw = new BinaryWriter(ms);
-                    //            bw.Write(1);
-                    //            bw.Write(0x4040);
-                    //            bw.Write(new byte[16 + 4 * 5 + 8 * 3 + 4]);
-                    //            bw.Write(data.Length);
-                    //            bw.Write(File.ReadAllBytes(dstpath));
-                    //            //bw.Write(Encoding.Unicode.GetBytes("TestDnD.txt".PadRight(260, '\0')));
-                    //            return ms;
-                    //        case "FileContents":
-                    //            return new MemoryStream(data);
-                    //    }
-                    //    return null;
-                    //};
-                    //var dde = DragDrop.DoDragDrop((TweetObjectUserControl)e, dobj, DragDropEffects.Copy);
                 }
-                //// ドラッグ解除
-                //else if (Mouse.LeftButton == MouseButtonState.Released)
-                //{
-                //    if (IsProcessing)
-                //    {
-                //        if (File.Exists(Path.GetFullPath(dst_path)))
-                //        {
-                //            File.Delete(Path.GetFullPath(dst_path));
-                //        }
-                //        IsProcessing = false;
-                //    }
-                //}
             }
         }
 

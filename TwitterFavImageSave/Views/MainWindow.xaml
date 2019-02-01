@@ -33,6 +33,9 @@
         <i:EventTrigger EventName="Closing">
             <i:InvokeCommandAction Command="{Binding CmdWindowClosing}" CommandParameter="{Binding}" />
         </i:EventTrigger>
+        <i:EventTrigger EventName="Loaded">
+            <i:InvokeCommandAction Command="{Binding CmdWindowLoaded}" />
+        </i:EventTrigger>
     </i:Interaction.Triggers>
     <materialDesign:DialogHost DialogContent="{Binding Path=DialogView}" IsOpen="{Binding Path=IsDialogOpen}">
         <Grid>

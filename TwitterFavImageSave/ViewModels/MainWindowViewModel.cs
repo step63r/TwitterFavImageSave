@@ -1,15 +1,14 @@
 ﻿using CoreTweet;
 using CoreTweet.Core;
 using Prism.Commands;
-using Prism.Interactivity.InteractionRequest;
 using Prism.Mvvm;
-using Reactive.Bindings;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Resources;
-using System.Windows.Controls;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Data;
 using TwitterFavImageSave.Common;
 using TwitterFavImageSave.UserControls;
 
@@ -23,6 +22,7 @@ namespace TwitterFavImageSave.ViewModels
         private string _pincode = "";
         private long _lastTweetId;
         private OAuth.OAuthSession _session;
+        private DelegateCommand _cmdWindowLoaded;
         private DelegateCommand _cmdWindowClosing;
         private DelegateCommand<object> _cmdOnScrollChanged;
         private TweetObjectUserControlViewModel _objectViewModel;
@@ -78,12 +78,19 @@ namespace TwitterFavImageSave.ViewModels
             set { SetProperty(ref _session, value); }
         }
         /// <summary>
+        /// WindowのLoadが完了した時のイベントコマンド
+        /// </summary>
+        public DelegateCommand CmdWindowLoaded
+        {
+            get { return _cmdWindowLoaded = _cmdWindowLoaded ?? new DelegateCommand(ExecuteWindowLoaded, CanExecuteWindowLoaded); }
+        }
+        /// <summary>
         /// Windowが閉じる時のイベントコマンド
         /// </summary>
         public DelegateCommand CmdWindowClosing
         {
             get { return _cmdWindowClosing = _cmdWindowClosing ?? new DelegateCommand(ExecuteWindowClosing, CanExecuteWindowClosing); }
-        }
+        }        
         /// <summary>
         /// ScrollChangedイベントコマンド
         /// </summary>
@@ -183,11 +190,21 @@ namespace TwitterFavImageSave.ViewModels
         #endregion
         #endregion
 
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
         public MainWindowViewModel()
         {
             // 初期処理
             GenerateCommonPath();
+            BindingOperations.EnableCollectionSynchronization(TweetList, new object());
+        }
 
+        /// <summary>
+        /// WindowのLoadが完了した時のイベントハンドラ
+        /// </summary>
+        public void ExecuteWindowLoaded()
+        {
             AccessToken = new Tokens();
             // トークン読込
             if (string.IsNullOrEmpty(Properties.Settings.Default.AccessToken) || string.IsNullOrEmpty(Properties.Settings.Default.AccessTokenSecret))
@@ -203,36 +220,46 @@ namespace TwitterFavImageSave.ViewModels
                     Properties.Settings.Default.AccessToken,
                     Properties.Settings.Default.AccessTokenSecret);
 
-                UpdateUserControl();
-            }            
+                var t = UpdateUserControl();
+            }
+        }
+        private bool CanExecuteWindowLoaded()
+        {
+            return true;
         }
 
-        private void UpdateUserControl()
+        /// <summary>
+        /// 画像リストを更新する
+        /// </summary>
+        private async Task UpdateUserControl()
         {
-            var ret = GetFavorites();
-            if (ret is null)
+            await Task.Run(() =>
             {
-                // お気に入りに何も登録されていなかった場合
-                return;
-            }
-
-            LastTweetId = GetOldestTwitterId(ret);
-
-            if (LastTweetId > 0)
-            {
-                foreach (var sts in ret)
+                var ret = GetFavorites();
+                if (ret is null)
                 {
-                    bool bHasMedia = sts.ExtendedEntities is null ? false : true;
-                    if (bHasMedia)
+                    // お気に入りに何も登録されていなかった場合
+                    return;
+                }
+
+                LastTweetId = GetOldestTwitterId(ret);
+
+                if (LastTweetId > 0)
+                {
+                    foreach (var sts in ret)
                     {
-                        for (int i = 0; i < sts.ExtendedEntities.Media.Length; i++)
+                        bool bHasMedia = sts.ExtendedEntities is null ? false : true;
+                        if (bHasMedia)
                         {
-                            var item = new TweetObjectUserControlViewModel(sts, i);
-                            TweetList.Add(item);
+                            for (int i = 0; i < sts.ExtendedEntities.Media.Length; i++)
+                            {
+                                var item = new TweetObjectUserControlViewModel(sts, i);
+                                TweetList.Add(item);
+                            }
                         }
                     }
                 }
-            }
+            }).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -282,7 +309,7 @@ namespace TwitterFavImageSave.ViewModels
                     // ダイアログを閉じる
                     IsDialogOpen = false;
                     DialogView = null;
-                    UpdateUserControl();
+                    var t = UpdateUserControl();
                     break;
             }
         }
@@ -399,7 +426,7 @@ namespace TwitterFavImageSave.ViewModels
             var tuple = obj as Tuple<double, double>;
             if (tuple.Item1 == tuple.Item2)
             {
-                UpdateUserControl();
+                var t = UpdateUserControl();
             }
         }
         /// <summary>

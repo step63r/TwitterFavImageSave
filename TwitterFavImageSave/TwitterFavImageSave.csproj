@@ -89,6 +89,7 @@
     </Compile>
     <Compile Include="Common\CustomDataObject.cs" />
     <Compile Include="Common\DataFormat.cs" />
+    <Compile Include="Common\WrappingStream.cs" />
     <Compile Include="Common\XamlConverter.cs" />
     <Compile Include="Common\XmlConverter.cs" />
     <Compile Include="Domain\NotEmptyValidationRule.cs" />
