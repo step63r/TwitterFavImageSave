@@ -203,7 +203,7 @@ namespace TwitterFavImageSave.ViewModels
             var saveFileDialog = new SaveFileDialog();
             saveFileDialog.FilterIndex = 1;
             saveFileDialog.Filter = "PNG画像(.png)|*.png|JPG画像(.jpg)|*.jpg|すべてのファイル(*.*)|*.*";
-            saveFileDialog.FileName = TweetImage.UriSource.Segments[2];
+            saveFileDialog.FileName = ImageUrl.Segments[2];
             bool? ret = saveFileDialog.ShowDialog();
             if (ret == true)
             {

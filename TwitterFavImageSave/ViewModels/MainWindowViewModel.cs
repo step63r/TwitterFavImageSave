@@ -233,6 +233,7 @@ namespace TwitterFavImageSave.ViewModels
             {
                 // 存在しなければ認証開始
                 StartAuthorize();
+                Properties.Settings.Default.Save();
             }
             else
             {
